@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: false
+  datasource:
+    primary:
+      jdbc-url: jdbc:mysql://fenglex.com:8306/db1?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+      driver-class-name: com.mysql.jdbc.Driver
+      username: root
+      password: c99ecff.
+    secondary:
+      jdbc-url: jdbc:mysql://fenglex.com:8306/db2?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+      driver-class-name: com.mysql.jdbc.Driver
+      username: root
+      password: c99ecff.
