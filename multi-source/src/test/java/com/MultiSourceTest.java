@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
 public class MultiSourceTest {
@@ -36,5 +38,15 @@ public class MultiSourceTest {
         userInfo.setCreateTime(time);
         userInfo.setUpdateTime(time);
         userInfoRepository.save(userInfo);
+    }
+
+    @Test
+    public void testDel() {
+        List<Long> allCreateTime = userRepository.findAllCreateTime();
+        if (allCreateTime != null && allCreateTime.size() > 1) {
+            Long aLong = allCreateTime.get(1);
+            userRepository.deleteAllByCreateTimeIsLessThanEqual(Integer.parseInt(aLong + ""));
+        }
+
     }
 }
