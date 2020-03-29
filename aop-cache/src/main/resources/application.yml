@@ -1,0 +1,7 @@
+spring:
+  redis:
+    host: fenglex.com
+    port: 6379
+    database: 0
+    timeout: 1000s
+    password: 604UXMf4
