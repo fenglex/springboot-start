@@ -19,10 +19,10 @@ public class CacheServiceImpl implements CacheService {
 
 
     @Override
-    //@Cache(key = "#u")
-    @Cache(key = "#u.name")
-    //@CachePut(cacheNames = "uuu", key = "#u.name")
-    public User getUserInfo(User u, int age) {
+    //
+    // @Cache(key = "#up.name")
+    @Cache
+    public User getUserInfo(User up) {
         User user = new User();
         user.setAge("12");
         user.setName("haifeng");

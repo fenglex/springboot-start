@@ -28,8 +28,11 @@ public class CacheAop {
 
     private final StringRedisTemplate redisTemplate;
 
-    public CacheAop(StringRedisTemplate redisTemplate) {
+    private final SpringCacheKeyGenerator keyGenerator;
+
+    public CacheAop(StringRedisTemplate redisTemplate, SpringCacheKeyGenerator keyGenerator) {
         this.redisTemplate = redisTemplate;
+        this.keyGenerator = keyGenerator;
     }
 
     @Pointcut("execution(* com.fenglex.aop.cache..*.*(..))")
@@ -46,19 +49,35 @@ public class CacheAop {
         Cache annotation = method.getAnnotation(Cache.class);
         if (annotation != null) {
             String key = annotation.key();
-            String value = redisTemplate.opsForValue().get(key);
-            String parseKey = parseKey(key, method, joinPoint.getArgs());
-            SimpleKeyGenerator generator = new SimpleKeyGenerator();
-            Object generate = generator.generate(null, method, joinPoint.getArgs());
+            String methodName = method.getName();
+            String cls = method.getDeclaringClass().getName();
+            String redisKey;
+            SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
+            if (key.isEmpty()) {
+               // Object generate = keyGenerator.generate(joinPoint.getTarget(), method, joinPoint.getArgs());
+                Object generate = simpleKeyGenerator.generate(joinPoint.getTarget(), method, joinPoint.getArgs());
+                redisKey = generate != null ? generate.toString() : "";
+            } else {
+                redisKey = cls + "." + methodName + "_" + parseKey(key, method, joinPoint.getArgs());
+            }
+
+            assert redisKey != null;
+            String value = redisTemplate.opsForValue().get(redisKey);
             if (value != null) {
                 Class<?> type = method.getReturnType();
                 return JSON.parseObject(value, type);
+            } else {
+                Object proceed = joinPoint.proceed();
+                if (proceed != null) {
+                    if (annotation.expire() != 0) {
+                        redisTemplate.opsForValue().set(redisKey, JSON.toJSONString(proceed), Duration.ofSeconds(annotation.expire()));
+                    } else {
+                        redisTemplate.opsForValue().set(redisKey, JSON.toJSONString(proceed));
+                    }
+
+                }
+                return proceed;
             }
-            Object proceed = joinPoint.proceed();
-            if (proceed != null) {
-                redisTemplate.opsForValue().set(key, JSON.toJSONString(proceed), Duration.ofSeconds(30));
-            }
-            return proceed;
         } else {
             return joinPoint.proceed();
         }
@@ -77,12 +96,11 @@ public class CacheAop {
         //SPEL上下文
         StandardEvaluationContext context = new StandardEvaluationContext();
         //把方法参数放入SPEL上下文中
+        assert paraNameArr != null;
         for (int i = 0; i < paraNameArr.length; i++) {
             context.setVariable(paraNameArr[i], args[i]);
         }
-        Expression expression = parser.parseExpression(key);
-        Object value = expression.getValue();
-        return expression.getValue(context, String.class);
+        return parser.parseExpression(key).getValue(context, String.class);
 
     }
 }

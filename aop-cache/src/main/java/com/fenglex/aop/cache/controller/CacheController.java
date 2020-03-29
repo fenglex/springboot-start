@@ -13,13 +13,12 @@ public class CacheController {
     private final CacheService cacheService;
 
 
-
     public CacheController(CacheService cacheService) {
         this.cacheService = cacheService;
     }
 
     @RequestMapping("/cache")
     public User getUserInfo(User userP) {
-        return cacheService.getUserInfo(userP, 3);
+        return cacheService.getUserInfo(userP);
     }
 }
